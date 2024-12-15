@@ -224,3 +224,196 @@ public class AppConfig {
 - Aliases provide flexibility when combining configurations or making your application more readable.  
 
 If you have specific questions about bean naming or aliases, feel free to ask!
+### Examples of Instantiating Beans in Spring  
+
+Spring offers multiple ways to create and manage beans. Below are examples for each approach:
+
+---
+
+### 1. **Instantiation with a Constructor**  
+
+#### **XML Configuration**  
+The most straightforward way: specify the class to be instantiated.  
+```xml
+<bean id="exampleBean" class="com.example.ExampleBean"/>
+```
+
+#### **Java Configuration**  
+Using `@Bean` to define a bean with its constructor:  
+```java
+@Configuration
+public class AppConfig {
+    @Bean
+    public ExampleBean exampleBean() {
+        return new ExampleBean();
+    }
+}
+```
+
+#### **Java Class**  
+A simple bean class with a constructor:  
+```java
+public class ExampleBean {
+    public ExampleBean() {
+        System.out.println("ExampleBean instantiated!");
+    }
+}
+```
+
+---
+
+### 2. **Instantiation with a Static Factory Method**  
+
+#### **XML Configuration**  
+Specify the factory class and its static method:  
+```xml
+<bean id="clientService" class="com.example.ClientService" factory-method="createInstance"/>
+```
+
+#### **Java Configuration**  
+Using `@Bean` to call a static factory method:  
+```java
+@Configuration
+public class AppConfig {
+    @Bean
+    public ClientService clientService() {
+        return ClientService.createInstance();
+    }
+}
+```
+
+#### **Java Class**  
+The class with a static factory method:  
+```java
+public class ClientService {
+    private static final ClientService INSTANCE = new ClientService();
+
+    private ClientService() {
+        System.out.println("ClientService instantiated using static factory method!");
+    }
+
+    public static ClientService createInstance() {
+        return INSTANCE;
+    }
+}
+```
+
+---
+
+### 3. **Instantiation with an Instance Factory Method**  
+
+#### **XML Configuration**  
+Create the factory bean and use its method to instantiate another bean:  
+```xml
+<bean id="serviceLocator" class="com.example.DefaultServiceLocator"/>
+<bean id="clientService" factory-bean="serviceLocator" factory-method="createClientServiceInstance"/>
+```
+
+#### **Java Configuration**  
+Define the factory bean and call its method:  
+```java
+@Configuration
+public class AppConfig {
+    @Bean
+    public DefaultServiceLocator serviceLocator() {
+        return new DefaultServiceLocator();
+    }
+
+    @Bean
+    public ClientService clientService(DefaultServiceLocator serviceLocator) {
+        return serviceLocator.createClientServiceInstance();
+    }
+}
+```
+
+#### **Java Class**  
+The factory class with instance methods:  
+```java
+public class DefaultServiceLocator {
+    private static final ClientService CLIENT_SERVICE = new ClientService();
+
+    public ClientService createClientServiceInstance() {
+        System.out.println("ClientService created via instance factory method!");
+        return CLIENT_SERVICE;
+    }
+}
+```
+
+---
+
+### 4. **Specifying a Nested Class as a Bean**  
+
+#### **XML Configuration**  
+Specify a nested class using `$` or `. ` in the `class` attribute:  
+```xml
+<bean id="nestedBean" class="com.example.OuterClass$NestedClass"/>
+```
+
+#### **Java Configuration**  
+Define the nested class bean using `@Bean`:  
+```java
+@Configuration
+public class AppConfig {
+    @Bean
+    public OuterClass.NestedClass nestedBean() {
+        return new OuterClass.NestedClass();
+    }
+}
+```
+
+#### **Java Class**  
+A nested static class:  
+```java
+public class OuterClass {
+    public static class NestedClass {
+        public NestedClass() {
+            System.out.println("NestedClass instantiated!");
+        }
+    }
+}
+```
+
+---
+
+### 5. **Handling Overloaded Factory Methods**  
+
+If the factory method is overloaded, you can specify the arguments explicitly in XML:  
+```xml
+<bean id="clientService" class="com.example.ServiceFactory" factory-method="createService">
+    <constructor-arg type="java.lang.String" value="customServiceName"/>
+</bean>
+```
+
+Or in Java-based configuration:  
+```java
+@Configuration
+public class AppConfig {
+    @Bean
+    public ClientService clientService() {
+        return ServiceFactory.createService("customServiceName");
+    }
+}
+```
+
+---
+
+### 6. **Determining Bean Runtime Type**  
+
+To determine the runtime type of a bean (especially when proxies or factories are involved):  
+```java
+ApplicationContext context = new AnnotationConfigApplicationContext(AppConfig.class);
+Class<?> beanType = context.getType("clientService");
+System.out.println("Runtime type of clientService: " + beanType.getName());
+```
+
+---
+
+### Summary  
+
+- **Constructor Instantiation**: The simplest and most common approach.  
+- **Static Factory Method**: Useful for legacy code or centralized object creation.  
+- **Instance Factory Method**: Allows for greater control via an intermediate factory bean.  
+- **Nested Classes**: Supported using `$` or `.` in XML or programmatically with `@Bean`.  
+- **Runtime Type**: Use `getType()` to determine the actual type of a bean if it’s unclear.  
+
+If you’d like further examples or explanations, feel free to ask!
